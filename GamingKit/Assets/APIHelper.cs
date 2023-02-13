@@ -83,30 +83,70 @@ public class APIHelper: APIHelperInterface
         return false;
     }
 
-    public Task<List<APIClasses.Spot>> GetSpots()
+    public async Task<List<APIClasses.Spot>> GetSpots()
     {
-        List<APIClasses.Spot> spots = new List<APIClasses.Spot>();
-        for (int i = 0; i < 6; i++)
+        List<APIClasses.Spot> spots = new List<APIClasses.Spot>();        
+        try
         {
-            APIClasses.Spot spot = new APIClasses.Spot();
-            spot.val = 1025 * i;
-            spot.nPlayers = i * 2;
-            spots.Add(spot);
+            var result = await contract.Read<string[][]>("getSpots");
+            Debug.Log("API players resut: " + result);
+
+            spots.Clear();
+            for (int i = 0; i < result.Length; i++)
+            {
+                var r = result[i];
+                APIClasses.Spot spot = new APIClasses.Spot();
+                spot.val = int.Parse(r[0]);
+                spot.nPlayers = int.Parse(r[1]);                
+                spots.Add(spot);
+            }
         }
-        return Task.FromResult(spots);
+        catch (System.Exception e)
+        {
+            Debug.Log("Error calling contract (see console): " + e.Message);
+        }
+        return spots;
     }
 
-    public Task<APIClasses.Meta> GetMeta()
+    public async Task<APIClasses.Meta> GetMeta()
     {
         APIClasses.Meta meta = new APIClasses.Meta();
-        meta.nextSettleTime = 1676250564;
-        meta.chip = 1000;
-        meta.pool = 2;
-        return Task.FromResult(meta);
+
+        int pool = await contract.Read<int>("pool");
+        int chip = await contract.Read<int>("chip");
+        int nextSettleTime = await contract.Read<int>("nextSettleTime");
+        
+        meta.nextSettleTime = nextSettleTime;
+        meta.chip = chip;
+        meta.pool = pool;
+        return meta;
     }
 
-    public Task<bool> Settle()
+    public async Task<bool> Settle()
     {
-        return Task.FromResult(true);
+        try
+        {
+            await contract.Write("settle");
+        }
+        catch (System.Exception e)
+        {
+            Debug.Log("Error calling contract (see console): " + e.Message);
+            return false;
+        }
+        return true;
+    }
+
+    public async Task<bool> Move(int pos)
+    {
+        try
+        {
+            await contract.Write("move", pos);
+        }
+        catch (System.Exception e)
+        {
+            Debug.Log("Error calling contract (see console): " + e.Message);
+            return false;
+        }
+        return true;
     }
 }

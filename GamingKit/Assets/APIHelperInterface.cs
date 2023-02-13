@@ -11,4 +11,5 @@ public interface APIHelperInterface
     public Task<APIClasses.Meta> GetMeta();
     public Task<bool> JoinGame(string name);
     public Task<bool> Settle();
+    public Task<bool> Move(int pos);
 }

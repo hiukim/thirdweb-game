@@ -54,6 +54,19 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     private GameObject settleButton;
 
+    [SerializeField]
+    private GameObject confirmSettleButton;
+    [SerializeField]
+    private GameObject confirmSettleLoading;
+    [SerializeField]
+    private GameObject confirmMoveButton;
+    [SerializeField]
+    private GameObject confirmMoveLoading;
+    [SerializeField]
+    private GameObject confirmJoinButton;
+    [SerializeField]
+    private GameObject confirmJoinLoading;
+
     private APIHelperInterface apiHelper;
 
     private string walletAddress = "";
@@ -62,6 +75,9 @@ public class GameManager : MonoBehaviour
     private APIClasses.Meta meta;
     private APIClasses.Player mePlayer;
     private int movePos;
+
+    private float elapsedUpdateTime = 0.0f;
+    private float autoUpdatePeriod = 1.0f;
 
     // Start is called before the first frame update
     void Start()
@@ -72,6 +88,7 @@ public class GameManager : MonoBehaviour
         mePanel.SetActive(false);
         movePanel.SetActive(false);
         newAccountPanel.SetActive(false);
+        settlePanel.SetActive(false);
 
 #if UNITY_EDITOR
         apiHelper = new MockAPIHelper();
@@ -88,11 +105,18 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        elapsedUpdateTime += Time.deltaTime;
+        if (elapsedUpdateTime > autoUpdatePeriod)
+        {
+            elapsedUpdateTime = 0;
+            UpdateTime();
+        }        
     }
 
     public async void Join()
     {
+        confirmJoinButton.SetActive(false);
+        confirmJoinLoading.SetActive(true);
         bool joined = await apiHelper.JoinGame(usernameInputText.text);
         if (joined)
         {
@@ -109,9 +133,15 @@ public class GameManager : MonoBehaviour
         Refresh();
     }
 
-    public void ConfirmMove()
+    public async void ConfirmMove()
     {
         Debug.Log("confirm move: " + movePos);
+        confirmMoveButton.SetActive(false);
+        confirmMoveLoading.SetActive(true);
+
+        await apiHelper.Move(movePos);
+        movePanel.SetActive(false);
+        Refresh();
     }
 
     public void CloseMovePanel()
@@ -121,6 +151,8 @@ public class GameManager : MonoBehaviour
 
     public void ShowSettlePanel()
     {
+        confirmSettleButton.SetActive(true);
+        confirmSettleLoading.SetActive(false);
         settlePanel.SetActive(true);
     }
 
@@ -131,8 +163,12 @@ public class GameManager : MonoBehaviour
 
     public async void ConfirmSettle()
     {
+        confirmSettleButton.SetActive(false);
+        confirmSettleLoading.SetActive(true);
+
         await apiHelper.Settle();
         Refresh();
+        HideSettlePanel();
     }
 
     public void SpotClick(int position)
@@ -144,6 +180,15 @@ public class GameManager : MonoBehaviour
         APIClasses.Spot toSpot = spots[position];
         SpotManager fromSpotManager = moveFromSpot.GetComponent<SpotManager>();
         SpotManager toSpotManager = moveToSpot.GetComponent<SpotManager>();
+
+        if (mePlayer.position == 0)
+        {
+            moveFromSpot.SetActive(false);
+        } else
+        {
+            moveFromSpot.SetActive(true);
+        }
+        
         fromSpotManager.SetSelected(false);
         fromSpotManager.SetNPlayerText(fromSpot.nPlayers);
         fromSpotManager.SetValText(fromSpot.val);
@@ -156,7 +201,8 @@ public class GameManager : MonoBehaviour
 
         movePos = position;
         movePanel.SetActive(true);
-        Debug.Log("spot click: " + position);
+        confirmMoveButton.SetActive(true);
+        confirmMoveLoading.SetActive(false);
     }
 
     public async void Refresh()
@@ -186,6 +232,12 @@ public class GameManager : MonoBehaviour
         connectWalletPanel.SetActive(walletAddress.Equals(""));
         mePanel.SetActive(mePlayer != null);
         joinPanel.SetActive(!walletAddress.Equals("") && mePlayer == null);
+        if (joinPanel.activeSelf)
+        {
+            confirmJoinButton.SetActive(true);
+            confirmJoinLoading.SetActive(false);
+        }
+        
 
         // refresh spots
 
@@ -224,14 +276,14 @@ public class GameManager : MonoBehaviour
     {
         long n = DateTimeOffset.Now.ToUnixTimeSeconds();
         long remainSecondTotal = Math.Max(0, meta.nextSettleTime - n);
-        Debug.Log("remain seconds: " + n + ", " + meta.nextSettleTime + ", " + remainSecondTotal);
+        //Debug.Log("remain seconds: " + n + ", " + meta.nextSettleTime + ", " + remainSecondTotal);
         return remainSecondTotal;
     }
 
     private int GetMoveCost()
     {
         long totalSeconds = 3600 * 24;
-        return (int) (meta.chip * (totalSeconds - GetRemainSecondTotal() / totalSeconds));
+        return (int) (meta.chip * (totalSeconds - GetRemainSecondTotal()) / totalSeconds);
     }
 
     private void UpdateTime()
