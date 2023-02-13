@@ -265,18 +265,19 @@ describe("Master contract", function () {
     verifySpots(await master.getSpots());
 
     const newSettleTime = Math.floor(Date.now() / 1000) -1;
-    console.log("newSettleTime", newSettleTime);
     await master.testSetSettleTime(newSettleTime);
     await master.settle();
 
+    // after settle, expanded by 1 numSpots
     let newPool = pool + chip * 3; // 3 players 
-    const newVal = Math.floor(newPool / numSpots);
-    newPool = newPool % numSpots;
+    const newVal = Math.floor(newPool / (numSpots+1));
+    newPool = newPool % (numSpots+1);
 
     expectedSpots = [
       {val: 0, nPlayers: 0},
       {val: newVal, nPlayers: 2},
       {val: newVal, nPlayers: 1},
+      {val: newVal, nPlayers: 0},
     ];
 
     verifySpots(await master.getSpots());
@@ -285,6 +286,50 @@ describe("Master contract", function () {
     expect(players[1].val).to.equal(initialVal + Math.floor(moveCost/numSpots)*3/2 - moveCost -chip);
     expect(players[2].val).to.equal(initialVal + Math.floor(moveCost/numSpots)*3/2 - moveCost -chip);
     expect(players[3].val).to.equal(initialVal + Math.floor(moveCost/numSpots)*3 - moveCost -chip);
+  });
 
+  it("settle2", async function() {
+    const newSettleTime = Math.floor(Date.now() / 1000) -1;
+    await master.testSetSettleTime(newSettleTime);
+    await master.settle();
+
+    expectedSpots = [
+      {val: 0, nPlayers: 0},
+      {val: 0, nPlayers: 0},
+      {val: 0, nPlayers: 0},
+    ];
+
+    verifySpots(await master.getSpots());
+  });
+
+  it("getNumSpots", async function() {
+    expect(await master.getNumSpots()).to.equal(2);
+
+    await master.connect(signers[0]).join("p1");
+    expect(await master.getNumSpots()).to.equal(2);
+
+    await master.connect(signers[1]).join("p2");
+    expect(await master.getNumSpots()).to.equal(3);
+
+    await master.connect(signers[2]).join("p3");
+    expect(await master.getNumSpots()).to.equal(3);
+
+    await master.connect(signers[3]).join("p4");
+    expect(await master.getNumSpots()).to.equal(4);
+
+    await master.connect(signers[4]).join("p5");
+    expect(await master.getNumSpots()).to.equal(4);
+
+    await master.connect(signers[5]).join("p6");
+    expect(await master.getNumSpots()).to.equal(4);
+
+    await master.connect(signers[6]).join("p7");
+    expect(await master.getNumSpots()).to.equal(4);
+
+    await master.connect(signers[7]).join("p8");
+    expect(await master.getNumSpots()).to.equal(5);
+
+    await master.connect(signers[8]).join("p9");
+    expect(await master.getNumSpots()).to.equal(5);
   });
 });

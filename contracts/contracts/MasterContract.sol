@@ -20,6 +20,7 @@ contract MasterContract {
   Spot[] public spots;
   uint public initialVal = 1000000;
   uint public numSpots = 2;
+  uint public numPlayers = 0;
   uint public pool = 0;
   uint public chip = 1000;
   uint public nextSettleTime = block.timestamp;
@@ -28,6 +29,7 @@ contract MasterContract {
 
   constructor() public {
     players.push(Player("DUMMY", 0, 0, toString(msg.sender), false));
+    numPlayers += 1;
     for (uint i = 0; i <= numSpots; i++) {
       spots.push(Spot(0, 0));
     }
@@ -56,6 +58,19 @@ contract MasterContract {
           str[3+i*2] = alphabet[uint(uint8(data[i] & 0x0f))];
       }
       return string(str);
+  }
+
+  function _computeNumSpots(uint _numPlayers) private pure returns (uint) {
+    uint newNumSpots = 2;
+    uint n = 1;
+    for (uint i = 0; i < 20; i++) {
+      n *= 2;
+
+      if (_numPlayers > n) { // dummy player +1
+        newNumSpots = 2 + (i+1);
+      }
+    }
+    return newNumSpots;
   }
 
   function _computeMoveCost(uint _chip, uint _nextSettleTime, uint _nowTime) private pure returns (uint){
@@ -87,6 +102,7 @@ contract MasterContract {
     require(playerId == 0, "address already reigstered");
 
     players.push(Player(_name, 0, initialVal-chip, toString(msg.sender), true));
+    numPlayers += 1;
     ownerToPlayerId[msg.sender] = players.length-1;
 
     spots[0].val += chip;
@@ -119,18 +135,31 @@ contract MasterContract {
     uint newPool = pool;
     uint[] memory earn = new uint[](numSpots+1);
     for (uint i = 1; i <= numSpots; i++) {
-      earn[i] = spots[i].val / spots[i].nPlayers; 
-      newPool += spots[i].val % spots[i].nPlayers;
+      if (spots[i].nPlayers > 0) {
+        earn[i] = spots[i].val / spots[i].nPlayers; 
+        newPool += spots[i].val % spots[i].nPlayers;
+      } else {
+        newPool += spots[i].val;
+      }
     }
 
-    for (uint i = 1; i < players.length; i++) {
+    for (uint i = 1; i < numPlayers; i++) {
       Player storage player = players[i];
       if (player.position > 0) {
         player.val += earn[player.position];
         player.val -= chip;
         newPool += chip;
       }
-      console.log("new player", i, player.val);
+      //console.log("new player", i, player.val);
+    }
+
+    // expand num spots if needed
+    uint newNumSpots = _computeNumSpots(numPlayers);
+    if (newNumSpots > numSpots) {
+      for (uint i = 0; i < newNumSpots - numSpots; i++) {
+        spots.push(Spot(0, 0));
+      }
+      numSpots = newNumSpots;
     }
 
     uint newSpotVal = newPool / numSpots;
@@ -164,6 +193,10 @@ contract MasterContract {
   function getMoveCost() external view returns(uint) {
     uint c = _computeMoveCost(chip, nextSettleTime, block.timestamp);
     return c;
+  }
+  function getNumSpots() external view returns(uint) {
+    uint n = _computeNumSpots(players.length);
+    return n;
   }
 
   function testSetSettleTime(uint t) external {
