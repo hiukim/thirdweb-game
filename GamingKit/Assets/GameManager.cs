@@ -192,6 +192,9 @@ public class GameManager : MonoBehaviour
         leaderboardPanel.SetActive(true);
         players.Sort((p1, p2) =>
         {
+            if (p1.position == 0) return 1;
+            if (p2.position == 0) return -1;
+
             int p1Val = p1.val + (spots[p1.position].val / spots[p1.position].nPlayers);
             int p2Val = p2.val + (spots[p2.position].val / spots[p2.position].nPlayers);
             return p1Val > p2Val ? -1 : 1;
@@ -209,7 +212,15 @@ public class GameManager : MonoBehaviour
             APIClasses.Player player = players[i];
             Transform go = leaderboardPlayersPanel.transform.GetChild(i);
             int totalVal = player.val + (spots[player.position].val / spots[player.position].nPlayers);
-            go.GetComponentInChildren<TMP_Text>().text = (i + 1) + ". " + player.name + " (" + totalVal + ")";            
+
+            if (player.position > 0)
+            {
+                go.GetComponentInChildren<TMP_Text>().text = (i + 1) + ". " + player.name + " (" + totalVal + ")";
+            } else
+            {
+                go.GetComponentInChildren<TMP_Text>().text = "--";
+            }
+            
         }
     }
 
@@ -271,7 +282,12 @@ public class GameManager : MonoBehaviour
             mePlayer = players.Find((p) => p.address.ToLower().Equals(walletAddress.ToLower()));
         }
 
-        playerCountText.text = "Player Count: " + players.Count.ToString();
+        int playerCount = 0;
+        for (int i = 0; i < players.Count; i++)
+        {
+            if (players[i].position > 0) playerCount += 1;
+        }
+        playerCountText.text = "Player Count: " + playerCount.ToString();
 
         connectWalletPanel.SetActive(walletAddress.Equals(""));
         mePanel.SetActive(mePlayer != null);
