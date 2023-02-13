@@ -54,7 +54,7 @@ public class MockAPIHelper : APIHelperInterface
     {
         await Task.Delay(1000);
         List<APIClasses.Spot> spots = new List<APIClasses.Spot>();
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < 5; i++)
         {
             APIClasses.Spot spot = new APIClasses.Spot();
             spot.val = 1025 * i + 10 * settleVariant;

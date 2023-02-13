@@ -115,8 +115,13 @@ public class GameManager : MonoBehaviour
 
     public async void Join()
     {
+        Debug.Log("is empty: " + string.IsNullOrEmpty(usernameInputText.text.Trim()));
+        Debug.Log("len: " + usernameInputText.text.Trim().Length + ". " + (usernameInputText.text.Trim().Length < 1));
+        if (usernameInputText.text.Trim().Length < 2) return; // usernameInputText.text has default length of 1?!?
+
         confirmJoinButton.SetActive(false);
         confirmJoinLoading.SetActive(true);
+
         bool joined = await apiHelper.JoinGame(usernameInputText.text);
         if (joined)
         {
@@ -207,6 +212,9 @@ public class GameManager : MonoBehaviour
 
     public async void Refresh()
     {
+        // refresh meta
+        meta = await apiHelper.GetMeta();
+
         // refresh players
         players = await apiHelper.GetPlayers();
         Debug.Log("refreshed players: " + players);
@@ -225,7 +233,7 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log("me player: " + mePlayer);
             myNameText.text = mePlayer.name;
-            myValText.text = mePlayer.val.ToString();
+            myValText.text = mePlayer.position == 0? (mePlayer.val + meta.chip).ToString(): mePlayer.val.ToString();
         }
         playerCountText.text = "Player Count: " + players.Count.ToString();
 
@@ -234,6 +242,7 @@ public class GameManager : MonoBehaviour
         joinPanel.SetActive(!walletAddress.Equals("") && mePlayer == null);
         if (joinPanel.activeSelf)
         {
+            usernameInputText.text = "";
             confirmJoinButton.SetActive(true);
             confirmJoinLoading.SetActive(false);
         }
@@ -264,8 +273,6 @@ public class GameManager : MonoBehaviour
             spotManager.SetSelected(mePlayer != null && i + 1 == mePlayer.position);
         }
 
-        // refresh meta
-        meta = await apiHelper.GetMeta();
 
         UpdateTime();
 
@@ -295,7 +302,7 @@ public class GameManager : MonoBehaviour
         if (remainSecondTotal == 0)
         {
             settleButton.SetActive(true);
-            nextSettleText.text = "Next Settle: ";
+            nextSettleText.text = "";
         }
         else
         {
