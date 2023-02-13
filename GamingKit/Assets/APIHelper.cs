@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 public class APIHelper: APIHelperInterface
 {
-    private static string MasterContractAddress = "0x27801ba89a7A5490782ad4f42fCa8C9C03cab0EE";
+    private static string MasterContractAddress = "0x75A33615D02D4e4dcDb4E2Fb2Ab8e60fc28DdF62";
 
     private ThirdwebSDK sdk;
     private Contract contract;
