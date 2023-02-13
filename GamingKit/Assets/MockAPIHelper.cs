@@ -27,7 +27,7 @@ public class MockAPIHelper : APIHelperInterface
         await Task.Delay(1000);
 
         List<APIClasses.Player> players = new List<APIClasses.Player>();
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 12; i++)
         {
             if (!isJoined)
             {

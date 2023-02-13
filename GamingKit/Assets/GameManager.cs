@@ -24,6 +24,10 @@ public class GameManager : MonoBehaviour
     private GameObject movePanel;
     [SerializeField]
     private GameObject gamePanel;
+    [SerializeField]
+    private GameObject leaderboardPanel;
+    [SerializeField]
+    private GameObject leaderboardPlayersPanel;
 
     [SerializeField]
     private GameObject moveFromSpot;
@@ -53,6 +57,8 @@ public class GameManager : MonoBehaviour
     private GameObject spotPrefab;
     [SerializeField]
     private GameObject settleButton;
+    [SerializeField]
+    private GameObject leaderPrefab;
 
     [SerializeField]
     private GameObject confirmSettleButton;
@@ -89,6 +95,11 @@ public class GameManager : MonoBehaviour
         movePanel.SetActive(false);
         newAccountPanel.SetActive(false);
         settlePanel.SetActive(false);
+        leaderboardPanel.SetActive(false);
+
+        for (int i = 0; i < spotsPanel.transform.childCount; i++) {
+            spotsPanel.transform.GetChild(i).gameObject.SetActive(false);
+        }
 
 #if UNITY_EDITOR
         apiHelper = new MockAPIHelper();
@@ -176,6 +187,37 @@ public class GameManager : MonoBehaviour
         HideSettlePanel();
     }
 
+    public void ShowLeaderBoard()
+    {
+        leaderboardPanel.SetActive(true);
+        players.Sort((p1, p2) =>
+        {
+            int p1Val = p1.val + (spots[p1.position].val / spots[p1.position].nPlayers);
+            int p2Val = p2.val + (spots[p2.position].val / spots[p2.position].nPlayers);
+            return p1Val > p2Val ? -1 : 1;
+        });
+        int nLeader = Math.Min(10, players.Count);
+
+        int currentCount = leaderboardPlayersPanel.transform.childCount;
+        for (int i = 0; i < nLeader - currentCount; i++)
+        {
+            Instantiate(leaderPrefab, leaderboardPlayersPanel.transform);
+        }
+
+        for (int i = 0; i < nLeader; i++)
+        {
+            APIClasses.Player player = players[i];
+            Transform go = leaderboardPlayersPanel.transform.GetChild(i);
+            int totalVal = player.val + (spots[player.position].val / spots[player.position].nPlayers);
+            go.GetComponentInChildren<TMP_Text>().text = (i + 1) + ". " + player.name + " (" + totalVal + ")";            
+        }
+    }
+
+    public void HideLeaderBoard()
+    {
+        leaderboardPanel.SetActive(false);
+    }
+
     public void SpotClick(int position)
     {
         if (mePlayer == null) return;
@@ -229,12 +271,6 @@ public class GameManager : MonoBehaviour
             mePlayer = players.Find((p) => p.address.ToLower().Equals(walletAddress.ToLower()));
         }
 
-        if (mePlayer != null)
-        {
-            Debug.Log("me player: " + mePlayer);
-            myNameText.text = mePlayer.name;
-            myValText.text = mePlayer.position == 0? (mePlayer.val + meta.chip).ToString(): mePlayer.val.ToString();
-        }
         playerCountText.text = "Player Count: " + players.Count.ToString();
 
         connectWalletPanel.SetActive(walletAddress.Equals(""));
@@ -249,7 +285,6 @@ public class GameManager : MonoBehaviour
         
 
         // refresh spots
-
         spots = await apiHelper.GetSpots();
         Debug.Log("refreshed spots: " + spots);
         for (int i = 0; i < spots.Count; i++)
@@ -266,6 +301,7 @@ public class GameManager : MonoBehaviour
         for (int i = 0; i < spots.Count - 1; i++)
         {
             SpotManager spotManager = spotsPanel.transform.GetChild(i).GetComponent<SpotManager>();
+            spotManager.gameObject.SetActive(true);
             spotManager.SetPos(i + 1);
             spotManager.SetGameManager(this);
             spotManager.SetNPlayerText(spots[i+1].nPlayers);
@@ -273,10 +309,15 @@ public class GameManager : MonoBehaviour
             spotManager.SetSelected(mePlayer != null && i + 1 == mePlayer.position);
         }
 
+        if (mePlayer != null)
+        {
+            Debug.Log("me player: " + mePlayer);
+            myNameText.text = mePlayer.name;
+            int totalVal = mePlayer.val + spots[mePlayer.position].val / spots[mePlayer.position].nPlayers;
+            myValText.text = totalVal.ToString();
+        }
 
         UpdateTime();
-
-        
     }
 
     private long GetRemainSecondTotal()
