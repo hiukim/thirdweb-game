@@ -85,6 +85,7 @@ contract MasterContract {
       remainSecondTotal = totalSeconds;
     }
     uint c = _chip * (totalSeconds - remainSecondTotal) / totalSeconds; 
+    if (c < 10) c = 10;
     return c;
   }
 

@@ -331,7 +331,9 @@ public class GameManager : MonoBehaviour
     private int GetMoveCost()
     {
         long totalSeconds = 3600 * 24;
-        return (int) (meta.chip * (totalSeconds - GetRemainSecondTotal()) / totalSeconds);
+        int c = (int) (meta.chip * (totalSeconds - GetRemainSecondTotal()) / totalSeconds);
+        if (c < 10) c = 10;
+        return c;
     }
 
     private void UpdateTime()

@@ -95,7 +95,7 @@ describe("Master contract", function () {
 
     newSettleTime = Math.floor(Date.now() / 1000) + 3600 * 24;
     await master.testSetSettleTime(newSettleTime);
-    expect(await master.getMoveCost()).to.equal(0);
+    expect(await master.getMoveCost()).to.equal(10); // min cost
 
     newSettleTime = Math.floor(Date.now() / 1000) + 3600 * 12;
     await master.testSetSettleTime(newSettleTime);
