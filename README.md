@@ -1,21 +1,23 @@
-# There are two main components in this repo
+There are two main components in this repo
 
-1. Smart Contracts - backend
+## 1. Smart Contracts (Backend)
 
-The backend game master exists as smart contracts (using thirdweb ContractKit), which can be deployed to any EVM compatible blockchains.
-Source code can be found under `contracts`
+The backend for the game master is made up of smart contracts built using Thirdweb ContractKit. These contracts can be deployed on any blockchain compatible with the Ethereum Virtual Machine (EVM). The source code can be found in the contracts directory.
 
-To build and upload to thirdweb:
+To build and deploy to Thirdweb, follow these steps:
+
+```
 > npm install
 > npm run build
 > npm run deploy
+```
 
-Then in the thirdweb dashboard, we can deploy to blockchains
+Once the build is complete, you can deploy the contracts on blockchains through the Thirdweb dashboard.
 
-Ref: https://thirdweb.com/contractkit
+Reference: https://thirdweb.com/contractkit
 
-2. Unity WebGL game - game frontend
+## 2. Unity WebGL game (Frontend)
 
-The game is developed in Unity (using thirdweb GamingKit), which are built into webGL platform and deployed to IPFS.
+The game was developed using Unity and Thirdweb GamingKit. The final product was built for the WebGL platform and can be deployed on IPFS.
 
-Ref: https://portal.thirdweb.com/gamingkit/quickstart
+Reference: https://portal.thirdweb.com/gamingkit/quickstart
