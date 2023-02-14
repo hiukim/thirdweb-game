@@ -24,3 +24,7 @@
 10. At the start of each new round, players contribute 1000 coins to the pool, which is evenly distributed among the treasure spots.
 
 11. Everyone stay where they are in the new round
+
+### A video walkthrough 
+
+https://www.youtube.com/watch?v=ZVS782N4bdo&t=31s
