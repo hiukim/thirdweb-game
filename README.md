@@ -14,6 +14,12 @@ To build and deploy to Thirdweb, follow these steps:
 
 Once the build is complete, you can deploy the contracts on blockchains through the Thirdweb dashboard.
 
+To run unit tests:
+
+```
+> npx hardhat test
+```
+
 Reference: https://thirdweb.com/contractkit
 
 ## 2. Unity WebGL game (Frontend)
